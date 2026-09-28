@@ -23,7 +23,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 0 | Project Setup | Complete |
 | 1 | Product Definition | Complete |
 | 2 | Data & Memory Architecture | Complete |
-| 3 | AI Architecture | Pending |
+| 3 | AI Architecture | Complete |
 | 4 | Application & Processing Architecture | Pending |
 | 5 | Personal Assistant / PA Architecture | Pending |
 | 6 | Personal Learning | Pending |
@@ -67,6 +67,23 @@ Status: **Complete.** Output: [`docs/phase-2-data-memory-architecture.md`](./doc
 - **Privacy baseline:** `user_id` on every table, RLS documented (not applied), private storage bucket + signed URLs, AI keys server-side only.
 - **Nothing executed:** reference DDL only — no Supabase changes, no migrations; implementation via forward-only migrations in the build phase.
 
+## Phase 3 — AI Architecture
+
+Status: **Complete.** Output: [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md).
+
+**Locked AI architecture (verified against provider docs on 2026-09-28):**
+
+- **Eyes:** Groq `qwen/qwen3.8-27b` (vision, JSON mode, preview status — guarded by a tested fallback). **Brain:** Groq `openai/gpt-oss-120b` with **strict structured outputs** (constrained decoding — verified limited to GPT-OSS models). **Signature:** NVIDIA `llama-nemotron-embed-vl-1b-v2` — multimodal, **2048-dim** (Groq hosts no embeddings; NVIDIA hosted API + self-host option).
+- **2 LLM calls + 2 embedding calls per capture** (vision → query embedding → retrieval → reasoning → persist → document embedding); collections/cross-memory reasoning only in periodic jobs. ≈ $0.006/capture.
+- Perception ≠ interpretation; the note is a first-class verbatim input; strict FACT-vs-SUGGESTION split enforced by the writer, not the model.
+- **Intent ≠ action:** separate vocabularies locked (action CHECK refined; documented schema change, not executed).
+- **Retrieval ≠ connections:** cosine similarity proposes candidates; only reasoned judgment with cited basis creates `suggested` connections. No generic `similar` type.
+- Collections emerge from ≥3 memories + ≥2 signal types; one reasoning call per discovery run; never per-capture.
+- Failure invariant: originals persist before any AI call; every AI artifact is re-creatable; embedding failure degrades gracefully (SQL-searchable + backfill).
+- Fallbacks: vision → OpenRouter `qwen/qwen3-vl-8b-instruct` (needed); reasoning → `gpt-oss-20b` (auto) / OpenRouter (off by default). No V1 embedding fallback (graceful degradation instead — vector spaces aren't cross-model comparable).
+- Privacy: Groq no-retention-by-default + self-serve ZDR (enable at impl); reasoning model never receives the raw image; OpenRouter off by default pending policy verification.
+- Model IDs are config, not code (Groq's vision slot churned 4× in 18 months — verified).
+
 ## Technology direction (candidates — NOT locked)
 
 | Area | Candidate |
@@ -76,15 +93,16 @@ Status: **Complete.** Output: [`docs/phase-2-data-memory-architecture.md`](./doc
 | Database | Supabase / Postgres |
 | File storage | Supabase Storage |
 | Vector search | pgvector |
-| Vision / screenshot understanding | Groq Qwen multimodal |
-| Reasoning / memory interpretation | Groq GPT-OSS 120B |
-| Multimodal embeddings | Llama Nemotron Embed VL (potential) |
-| Fallback models | Gemma models / OpenRouter models |
+| Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
+| Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
+| Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
+| Fallback models | ✅ Locked (P3): minimal set (see Phase 3 §17); Gemma documented, not in V1 chain |
 
-Phase 3 (AI Architecture) and Phase 4 (Application & Processing Architecture) will evaluate and finalize these. **No integrations before then.**
+The AI stack was evaluated against live provider documentation and locked in Phase 3. Frontend/backend/deployment candidates are evaluated and finalized in Phase 4. **No integrations before the build phase.**
 
 ## Phase log
 
 - **2026-09-28 — Phase 0 (Project Setup):** repo initialized (`ScreenView`), initial project structure, README, project plan, `docs/` directory.
 - **2026-09-28 — Phase 1 (Product Definition):** product definition documented in [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md); no application code (by design). Next: Phase 2 — Data & Memory Architecture (awaiting go-ahead).
 - **2026-09-28 — Phase 2 (Data & Memory Architecture):** data model defined in [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md) — 7-table greenfield design, reference DDL only, nothing executed. Next: Phase 3 — AI Architecture (awaiting go-ahead).
+- **2026-09-28 — Phase 3 (AI Architecture):** AI architecture defined in [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md) — models verified against provider docs and locked (Groq qwen3.8-27b vision · Groq gpt-oss-120b reasoning · NVIDIA embed-vl 2048-d), contracts + fallbacks + failure handling defined; nothing implemented. Next: Phase 4 — Application & Processing Architecture (awaiting go-ahead).

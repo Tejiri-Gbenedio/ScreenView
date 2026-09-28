@@ -12,7 +12,8 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 
 - **Phase 1 — Product Definition:** complete — see [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md).
 - **Phase 2 — Data & Memory Architecture:** complete — see [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md).
-- No application code yet (by design). Next up: Phase 3 — AI Architecture.
+- **Phase 3 — AI Architecture:** complete — see [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md).
+- No application code yet (by design). Next up: Phase 4 — Application & Processing Architecture.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
@@ -25,7 +26,7 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 
 ## Architecture direction (not locked)
 
-GitHub → frontend + backend application (likely Vercel) → Supabase (Postgres, Storage, pgvector) → AI services (Groq; candidates to be finalized in later phases).
+GitHub → frontend + backend application (likely Vercel) → Supabase (Postgres, Storage, pgvector) → AI services: Groq (vision + reasoning) and NVIDIA (embeddings) — locked in Phase 3; fallbacks via OpenRouter where justified.
 
 ScreenView is a real software application — it is **not** an n8n / Zapier / Make workflow project.
 
