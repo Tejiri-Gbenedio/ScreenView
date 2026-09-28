@@ -10,9 +10,9 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 
 ## Status
 
-- **Phase 0 — Project Setup:** complete.
 - **Phase 1 — Product Definition:** complete — see [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md).
-- No application code yet (by design). Next up: Phase 2 — Data & Memory Architecture.
+- **Phase 2 — Data & Memory Architecture:** complete — see [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md).
+- No application code yet (by design). Next up: Phase 3 — AI Architecture.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work

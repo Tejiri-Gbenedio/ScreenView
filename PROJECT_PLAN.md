@@ -22,7 +22,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 |---|---|---|
 | 0 | Project Setup | Complete |
 | 1 | Product Definition | Complete |
-| 2 | Data & Memory Architecture | Pending |
+| 2 | Data & Memory Architecture | Complete |
 | 3 | AI Architecture | Pending |
 | 4 | Application & Processing Architecture | Pending |
 | 5 | Personal Assistant / PA Architecture | Pending |
@@ -50,6 +50,23 @@ Status: **Complete.** Output: [`docs/phase-1-product-definition.md`](./docs/phas
 - Draft minimal taxonomies: actions (Buy, Research, Try, Build, Read, Watch, Save for later, Compare, Contact, …); status (New, Active, Completed, Dismissed, Archived).
 - Non-goals documented: not a file manager, not a note-taking app, not a chatbot, not an enterprise knowledge-management system, not a workflow automation platform.
 
+## Phase 2 — Data & Memory Architecture
+
+Status: **Complete.** Output: [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md).
+
+**Decisions locked in Phase 2:**
+
+- **Greenfield confirmed:** no existing schema, SQL, migrations, or Supabase configuration anywhere in the repo — nothing was discarded, migrated, or externally touched.
+- **7-table model:** `captures` (immutable originals) · `memories` (current understanding; 1:1 with capture in V1) · `memory_events` (append-only intent/status/action/topic history with provenance) · `connections` (meaningful memory↔memory relations with suggestion states) · `collections` + `collection_members` (dynamic many-to-many groups with suggestion states) · `memory_embeddings` (model-versioned vectors).
+- **Capture ≠ Memory:** the original note is verbatim and never overwritten by AI interpretation.
+- **Intent history** is append-only and fully reconstructable; current values are denormalized onto the memory; `unknown` is first-class; nothing historical is destroyed.
+- **Suggestions vs facts:** AI-proposed connections/collections/memberships carry state + evidence (`basis`); dismissals are kept as learning signals, never hard-deleted.
+- **Small evolvable vocabularies** (intent / action / status / relationship types) as text `CHECK` constraints — no giant enums.
+- **Embeddings:** separate table keyed by `(memory, model)` with a canonical-input hash; the embedding represents the memory semantically (not raw OCR); model + dimensions deferred to Phase 3; pgvector HNSW/cosine planned.
+- **Duplicates:** exact-duplicate signal via indexed per-user `file_hash` (duplicates allowed; policy deferred); near-duplicate → future pHash; same-subject → `same_subject` connections.
+- **Privacy baseline:** `user_id` on every table, RLS documented (not applied), private storage bucket + signed URLs, AI keys server-side only.
+- **Nothing executed:** reference DDL only — no Supabase changes, no migrations; implementation via forward-only migrations in the build phase.
+
 ## Technology direction (candidates — NOT locked)
 
 | Area | Candidate |
@@ -70,3 +87,4 @@ Phase 3 (AI Architecture) and Phase 4 (Application & Processing Architecture) wi
 
 - **2026-09-28 — Phase 0 (Project Setup):** repo initialized (`ScreenView`), initial project structure, README, project plan, `docs/` directory.
 - **2026-09-28 — Phase 1 (Product Definition):** product definition documented in [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md); no application code (by design). Next: Phase 2 — Data & Memory Architecture (awaiting go-ahead).
+- **2026-09-28 — Phase 2 (Data & Memory Architecture):** data model defined in [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md) — 7-table greenfield design, reference DDL only, nothing executed. Next: Phase 3 — AI Architecture (awaiting go-ahead).

@@ -8,5 +8,6 @@ Phase documentation lives here: product definition, data & memory architecture, 
 ## Index
 
 - [Phase 1 — Product Definition](./phase-1-product-definition.md)
+- [Phase 2 — Data & Memory Architecture](./phase-2-data-memory-architecture.md)
 
 _(Later phases will be added as they are completed.)_
