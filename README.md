@@ -11,8 +11,9 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 ## Status
 
 - **Phase 0 — Project Setup:** complete.
-- **Phase 1 — Product Definition:** in progress — output lands in [`docs/`](./docs/).
-- No application code yet (by design). Full roadmap: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
+- **Phase 1 — Product Definition:** complete — see [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md).
+- No application code yet (by design). Next up: Phase 2 — Data & Memory Architecture.
+- Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
 

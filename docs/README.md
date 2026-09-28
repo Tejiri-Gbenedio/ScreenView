@@ -7,4 +7,6 @@ Phase documentation lives here: product definition, data & memory architecture, 
 
 ## Index
 
-_Phase documents will be listed here as they are completed._
+- [Phase 1 — Product Definition](./phase-1-product-definition.md)
+
+_(Later phases will be added as they are completed.)_

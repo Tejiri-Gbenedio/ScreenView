@@ -21,7 +21,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | Phase | Name | Status |
 |---|---|---|
 | 0 | Project Setup | Complete |
-| 1 | Product Definition | In progress |
+| 1 | Product Definition | Complete |
 | 2 | Data & Memory Architecture | Pending |
 | 3 | AI Architecture | Pending |
 | 4 | Application & Processing Architecture | Pending |
@@ -33,9 +33,22 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 
 ## Phase 1 — Product Definition
 
-Status: **In progress.**
+Status: **Complete.** Output: [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md).
 
-_Output: `docs/phase-1-product-definition.md` (pending)._
+**Decisions locked in Phase 1:**
+
+- ScreenView is a personal-first screenshot second brain for a single user (the creator) in V1.
+- Capture: screenshot + optional note → upload → done. Zero required metadata at capture time.
+- Screenshot = *what*; note = *why*. Explicit user statements always outrank AI inference.
+- Topic ("what is this about?") and intent ("why did I save this?") are separate concepts.
+- Intent resolves through an explicit hierarchy: explicit statement > strong contextual statement > existing user behavior/pattern > visual inference > general AI inference. **"Unknown" is a valid answer** — intent is never invented.
+- Intent history is preserved: intent can change without destroying what it was before.
+- Collections are dynamic and AI-assisted, not folders; a capture can belong to multiple collections.
+- Collections/projects are only *suggested* once enough evidence exists — never declared from a single capture.
+- AI suggestions are always distinguishable from user intention; inferences never silently become user facts.
+- The PA stays quiet at capture time; it reports **weekly / twice-weekly** with the structure: Immediate / Needs Attention → Emerging → Everything Else.
+- Draft minimal taxonomies: actions (Buy, Research, Try, Build, Read, Watch, Save for later, Compare, Contact, …); status (New, Active, Completed, Dismissed, Archived).
+- Non-goals documented: not a file manager, not a note-taking app, not a chatbot, not an enterprise knowledge-management system, not a workflow automation platform.
 
 ## Technology direction (candidates — NOT locked)
 
@@ -56,3 +69,4 @@ Phase 3 (AI Architecture) and Phase 4 (Application & Processing Architecture) wi
 ## Phase log
 
 - **2026-09-28 — Phase 0 (Project Setup):** repo initialized (`ScreenView`), initial project structure, README, project plan, `docs/` directory.
+- **2026-09-28 — Phase 1 (Product Definition):** product definition documented in [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md); no application code (by design). Next: Phase 2 — Data & Memory Architecture (awaiting go-ahead).
