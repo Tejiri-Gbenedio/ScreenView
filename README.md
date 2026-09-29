@@ -18,7 +18,7 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 - **Phase 6 — Personal Learning Architecture:** complete — see [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md).
 - **Phase 7 — Interface & UX Architecture:** complete — see [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md).
 - **Phase 8 — Build Plan & V1 Implementation:** complete — see [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md).
-- No application code yet (by design). Next up: Phase 9 — Actual Implementation.
+- **Phase 9 — Actual Implementation: in progress** — app foundation, capture flow, processing pipeline and memory UI in place; live at https://screenview-two.vercel.app.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
@@ -40,3 +40,20 @@ ScreenView is a real software application — it is **not** an n8n / Zapier / Ma
 - `README.md` — this file
 - `PROJECT_PLAN.md` — roadmap, working rules, decisions, guardrails
 - `docs/` — phase documentation (product, architecture, design)
+- `app/` · `components/` · `lib/` · `server/` · `inngest/` · `supabase/` · `tests/` — application code
+
+## Development
+
+Requirements: Node 20+, a Supabase project (schema lives in [`supabase/migrations/`](./supabase/migrations/)), provider keys — see [`.env.example`](./.env.example).
+
+```bash
+npm install
+# copy .env.example → .env.local and fill in values
+npm run dev      # http://localhost:3000
+npm test         # unit tests
+npm run build    # production build
+```
+
+- **Processing jobs:** locally, run the Inngest dev server: `npx inngest-cli@latest dev -u http://localhost:3000/api/inngest`. In production, set `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY`.
+- **⚠️ Embeddings dev note:** the `nvidia/llama-nemotron-embed-vl-1b-v2:free` endpoint (via OpenRouter) is a **development/testing provider** — its free tier logs inputs. Not for real private data long-term; the host is config-swappable (same model → no schema change).
+- **Deployment:** pushes to `main` auto-deploy on Vercel (repo connected).
