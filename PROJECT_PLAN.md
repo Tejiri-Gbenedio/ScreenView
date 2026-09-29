@@ -29,7 +29,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 6 | Personal Learning | Complete |
 | 7 | Interface & UX | Complete |
 | 8 | Build Plan & V1 Implementation | Complete |
-| 9 | Actual Implementation | Pending |
+| 9 | Actual Implementation | In progress |
 
 ## Phase 1 — Product Definition
 
@@ -183,7 +183,7 @@ Status: **Complete.** Output: [`docs/phase-8-build-plan.md`](./docs/phase-8-buil
 | Interface / UX | ✅ Locked (P7): capture-first 3-area nav; “You said vs ScreenView thinks” language; in-app PA; mobile + desktop defined |
 | Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
 | Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
-| Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
+| Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d; served via OpenRouter (`:free` — verified 2026-09-29) or NVIDIA NIM / self-host |
 | Fallback models | ✅ Locked (P3): minimal set (see Phase 3 §17); Gemma documented, not in V1 chain |
 
 The stack is locked through Phase 4 (AI models verified in Phase 3; application/platform choices verified in Phase 4). **No integrations before the build phase.**
@@ -199,3 +199,4 @@ The stack is locked through Phase 4 (AI models verified in Phase 3; application/
 - **2026-09-29 — Phase 6 (Personal Learning Architecture):** learning architecture defined in [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md) — signal taxonomy, evidence/confidence/decay model, feedback-loop safeguards, one new `learned_patterns` table, GPT-OSS context injection; nothing implemented. Next: Phase 7 — Interface & UX (awaiting go-ahead).
 - **2026-09-29 — Phase 7 (Interface & UX Architecture):** UX architecture defined in [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md) — navigation, capture experience, memory card/detail, corrections, search, PA surface, states, journeys, screen inventory; nothing implemented. Next: Phase 8 — Build Plan & V1 Implementation (awaiting go-ahead).
 - **2026-09-29 — Phase 8 (Build Plan & V1 Implementation):** build plan defined in [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md) — V1 success criteria, locked stack, repo layout, 10 stages + sprints, first milestone, testing strategy, risks, costs, deployment path, anti-scope; nothing implemented. Next: Phase 9 — Actual Implementation (awaiting go-ahead).
+- **2026-09-29 — Phase 9 (Actual Implementation — in progress):** Supabase project `screenview` provisioned (West EU Ireland; full schema applied + verified); app scaffold + auth foundation deployed live at https://screenview-two.vercel.app (Vercel project `blackmann-s-projects/screenview`, GitHub connected for auto-deploys). Embeddings provider verified: `nvidia/llama-nemotron-embed-vl-1b-v2:free` works via OpenRouter (2048-d, $0; free tier logs inputs — host swappable). Next: capture flow → processing pipeline → memory UI (M1).

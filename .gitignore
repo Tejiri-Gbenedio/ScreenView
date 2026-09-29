@@ -30,3 +30,5 @@ coverage/
 # Supabase local state
 supabase/.temp/
 supabase/.branches/
+
+.vercel

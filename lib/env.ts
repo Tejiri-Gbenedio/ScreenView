@@ -28,8 +28,10 @@ export const env = {
   // Model IDs are configuration, never hard-coded (Phase 3).
   visionModelId: () => process.env.VISION_MODEL_ID ?? "qwen/qwen3.8-27b",
   reasoningModelId: () => process.env.REASONING_MODEL_ID ?? "openai/gpt-oss-120b",
+  // Verified 2026-09-29: available via OpenRouter as `…-v2:free` (2048-d, $0;
+  // free tier logs inputs — swap host or variant for stricter privacy).
   embeddingModelId: () =>
-    process.env.EMBEDDING_MODEL_ID ?? "nvidia/llama-nemotron-embed-vl-1b-v2",
+    process.env.EMBEDDING_MODEL_ID ?? "nvidia/llama-nemotron-embed-vl-1b-v2:free",
 
   processingPaused: () => process.env.PROCESSING_PAUSED === "1",
 };
