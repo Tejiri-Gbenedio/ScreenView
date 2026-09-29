@@ -25,7 +25,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 2 | Data & Memory Architecture | Complete |
 | 3 | AI Architecture | Complete |
 | 4 | Application & Processing Architecture | Complete |
-| 5 | Personal Assistant / PA Architecture | Pending |
+| 5 | Personal Assistant / PA Architecture | Complete |
 | 6 | Personal Learning | Pending |
 | 7 | Interface & UX | Pending |
 | 8 | Build Plan & V1 Implementation | Pending |
@@ -101,7 +101,24 @@ Status: **Complete.** Output: [`docs/phase-4-application-processing-architecture
 - **No new tables** for jobs (captures operational columns + Inngest state); refinements documented: status CHECK extension, `attempt_count`/`last_error`/`last_attempt_at`, `memories.perception jsonb`, action vocab — none executed.
 - **PA runs as a scheduled job** (Mon & Thu); its report storage is flagged as the one genuinely necessary new table, finalized in Phase 5.
 
-## Technology stack (locked through Phase 4)
+## Phase 5 — Personal Assistant / PA Architecture
+
+Status: **Complete.** Output: [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md).
+
+**Locked PA architecture:**
+
+- **Purpose:** the PA remembers what was saved and why — a quiet scheduled layer; not a dashboard, task manager, or chat.
+- **V1 capabilities (4):** aged unresolved-intent reminders · emerging patterns (incl. repeated interests) · strict project candidates · proactive recall (incl. saved-for-later). All other proposed functions evaluated and excluded.
+- **Cadence retained:** Mon & Thu 18:00 WAT with an emptiness gate — no useful items → quiet period, no manufactured insights, no notifications.
+- **Deterministic-first:** candidates, eligibility, cooldowns, caps and validation via SQL; exactly ≤1 GPT-OSS call per run to word the selected evidence (never the full DB, never raw images).
+- **Trust:** fact / inference / suggestion as distinct claim types in wording + metadata; every item grounded in memory ids; quotes verbatim; PA writes only reports — all state changes via user actions.
+- **Quietness:** ≤5 items/report, section caps, one reminder per memory per cooldown (21d, escalating on ignore), 90-day cooldowns for patterns/recall, suppression instead of nagging.
+- **Reminders:** min ages by intent (14–30d), snooze/complete/dismiss/keep-active actions; reminders expire by suppression; memories never auto-changed.
+- **Projects = collections with `kind='project'`** (stricter evidence: ≥4 memories + build signals + time spread); never forced, no project-management features.
+- **Storage:** one new table (`pa_reports`) + `memories.pa_state` + `collections.kind` — documented, not executed.
+- **Delivery:** in-app only (no email/push in V1); future conversational PA boundary defined (grounded Q&A, not built).
+
+## Technology stack (locked through Phase 5)
 
 | Area | Candidate |
 |---|---|
@@ -111,6 +128,7 @@ Status: **Complete.** Output: [`docs/phase-4-application-processing-architecture
 | File storage | Supabase Storage |
 | Vector search | pgvector |
 | Job / background processing | ✅ Locked (P4): Inngest — durable steps, retries, concurrency caps, cron |
+| PA / proactive layer | ✅ Locked (P5): scheduled detector → synthesis pipeline (Mon/Thu); one `pa_reports` table; in-app delivery |
 | Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
 | Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
 | Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
@@ -125,3 +143,4 @@ The stack is locked through Phase 4 (AI models verified in Phase 3; application/
 - **2026-09-28 — Phase 2 (Data & Memory Architecture):** data model defined in [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md) — 7-table greenfield design, reference DDL only, nothing executed. Next: Phase 3 — AI Architecture (awaiting go-ahead).
 - **2026-09-28 — Phase 3 (AI Architecture):** AI architecture defined in [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md) — models verified against provider docs and locked (Groq qwen3.8-27b vision · Groq gpt-oss-120b reasoning · NVIDIA embed-vl 2048-d), contracts + fallbacks + failure handling defined; nothing implemented. Next: Phase 4 — Application & Processing Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 4 (Application & Processing Architecture):** application & processing architecture defined in [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md) — Next.js on Vercel, direct-to-storage uploads, Inngest job layer, state machine + idempotency + security + cost controls; nothing implemented. Next: Phase 5 — Personal Assistant / PA Architecture (awaiting go-ahead).
+- **2026-09-29 — Phase 5 (Personal Assistant / PA Architecture):** PA architecture defined in [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md) — 4 V1 capabilities, reminder/pattern/project logic, fact-vs-inference-vs-suggestion discipline, deterministic-first generation, `pa_reports` storage decision, in-app delivery; nothing implemented. Next: Phase 6 — Personal Learning Architecture (awaiting go-ahead).
