@@ -4,6 +4,7 @@ import { inngest } from "../client";
 import { analyzeImage, embedText, interpretMemory, toVectorLiteral } from "@/server/ai/providers";
 import { buildCanonicalText, buildQueryText, type Perception } from "@/server/ai/contracts";
 import { retrieveContext } from "@/server/services/retrieval";
+import { persistConnectionCandidates } from "@/server/services/connections";
 import * as persist from "@/server/services/persist";
 import * as storage from "@/server/services/storage";
 
@@ -112,6 +113,22 @@ export const processCapture = inngest.createFunction(
       })
     );
 
+    // [5b] Connections — persist the brain's justified candidate connections as
+    // *suggested* (non-fatal; cosine similarity alone never creates a connection).
+    const connections = await step.run("connections", async () => {
+      try {
+        return await persistConnectionCandidates({
+          userId,
+          newMemoryId: memoryId,
+          allowedMemoryIds: cards.map((c) => c.memory_id),
+          candidates: (interpretation.candidate_connections ?? []) as any[],
+        });
+      } catch (error) {
+        console.error("connection persistence failed:", (error as Error).message);
+        return { created: 0, skipped: 0 };
+      }
+    });
+
     // [6] Document embedding (non-fatal — backfill-able; never fabricated)
     const embedded = await step.run("document-embedding", async () => {
       try {
@@ -139,6 +156,6 @@ export const processCapture = inngest.createFunction(
       }
     });
 
-    return { memoryId, embedded };
+    return { memoryId, embedded, connectionsCreated: connections.created };
   }
 );

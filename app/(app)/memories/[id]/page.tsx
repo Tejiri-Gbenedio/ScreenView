@@ -4,7 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { signedUrlMap } from "@/server/services/storage";
 import { CorrectionChips } from "@/components/memory/CorrectionChips";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { relativeTime } from "@/lib/labels";
+import { ConnectionActions } from "@/components/memory/ConnectionActions";
+import { listConnectionsForMemory } from "@/server/services/connections";
+import { collectionsForMemory } from "@/server/services/collections";
+import { RELATIONSHIP_LABELS, relativeTime } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +40,9 @@ export default async function MemoryDetailPage({ params }: { params: { id: strin
     : { data: [] as never[] };
 
   const urls = await signedUrlMap([capture.storage_path], 3600);
+
+  const connections = memory ? await listConnectionsForMemory(memory.id) : [];
+  const collectionChips = memory ? await collectionsForMemory(memory.id) : [];
 
   return (
     <div className="space-y-8 pb-16">
@@ -91,6 +97,71 @@ export default async function MemoryDetailPage({ params }: { params: { id: strin
             : "Understanding…"}
         </section>
       )}
+
+      {connections.length > 0 ? (
+        <section className="space-y-3">
+          <p className="text-[11px] uppercase tracking-wide text-neutral-400">Related memories</p>
+          <ul className="space-y-2">
+            {connections.map((connection) => (
+              <li
+                key={connection.connectionId}
+                className="rounded-2xl border border-neutral-200 bg-white p-3"
+              >
+                <div className="flex gap-3">
+                  <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
+                    {connection.partnerSignedUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={connection.partnerSignedUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/memories/${connection.partnerCaptureId}`}
+                      className="block truncate text-sm font-medium hover:underline"
+                    >
+                      {connection.partnerTitle ?? "Screenshot"}
+                    </Link>
+                    <p className="mt-0.5 text-[11px] text-neutral-500">
+                      {RELATIONSHIP_LABELS[connection.relationshipType] ?? connection.relationshipType}
+                      {connection.state === "suggested" ? " · ScreenView suggested" : " · Confirmed"}
+                    </p>
+                    {connection.basis ? (
+                      <p className="mt-1 text-xs text-neutral-500">{connection.basis}</p>
+                    ) : null}
+                    {connection.state === "suggested" ? (
+                      <div className="mt-2">
+                        <ConnectionActions connectionId={connection.connectionId} />
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      {collectionChips.length > 0 ? (
+        <section className="space-y-2">
+          <p className="text-[11px] uppercase tracking-wide text-neutral-400">In collections</p>
+          <div className="flex flex-wrap gap-2">
+            {collectionChips.map((chip) => (
+              <Link
+                key={chip.id}
+                href={`/collections/${chip.id}`}
+                className="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs text-neutral-700 hover:border-neutral-500"
+              >
+                {chip.name}
+                {chip.kind === "project" ? " · project" : ""}
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       {(events ?? []).length > 0 ? (
         <section className="space-y-2">

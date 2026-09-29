@@ -35,6 +35,13 @@ export const STATUS_LABELS: Record<string, string> = {
   archived: "Archived",
 };
 
+export const RELATIONSHIP_LABELS: Record<string, string> = {
+  same_subject: "Same subject",
+  complementary: "Complementary",
+  thematic: "Thematic",
+  user_linked: "You linked these",
+};
+
 export const INTENT_OPTIONS = Object.keys(INTENT_LABELS);
 export const ACTION_OPTIONS = Object.keys(ACTION_LABELS);
 export const STATUS_OPTIONS = Object.keys(STATUS_LABELS);

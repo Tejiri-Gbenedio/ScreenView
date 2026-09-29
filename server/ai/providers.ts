@@ -312,3 +312,72 @@ export async function embedText(text: string): Promise<number[]> {
 export function toVectorLiteral(vec: number[]): string {
   return `[${vec.join(",")}]`;
 }
+
+// ---------------------------------------------------------------- collections
+
+const COLLECTION_SYSTEM = `You name and describe a group of related memories for ScreenView, a personal memory system for one user.
+
+RULES:
+- Synthesize ONLY from the provided evidence (member titles/topics/intents/actions and the detected signals). Never invent facts, plans, or intentions the evidence does not support.
+- Hedged observation tone: "These saves look like..." / "A group around...". Never say "you want", "you plan to", "you're interested in".
+- name: 2-6 words, concrete, no quotes, no trailing period. If it is a project candidate, name it like "Something to build: X".
+- description: ONE short sentence describing what the group is (max 160 chars).
+- Return only a JSON object with keys { "name": string, "description": string }.`;
+
+export async function synthesizeCollection(input: {
+  members: Array<{ title: string | null; topic: string | null; intent: string | null; action: string | null }>;
+  signals: string[];
+  isProject: boolean;
+}): Promise<{ name: string; description: string }> {
+  const payload = [
+    "DETECTED_SIGNALS (deterministic, from code):",
+    JSON.stringify(input.signals),
+    `PROJECT_CANDIDATE: ${input.isProject ? "yes" : "no"}`,
+    "MEMBER_MEMORIES:",
+    JSON.stringify(input.members.slice(0, 12)),
+  ].join("\n");
+
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["name", "description"],
+    properties: {
+      name: { type: "string" },
+      description: { type: "string" },
+    },
+  } as const;
+
+  const body = {
+    model: env.reasoningModelId(),
+    messages: [
+      { role: "system", content: COLLECTION_SYSTEM },
+      { role: "user", content: payload },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: { name: "collection_synthesis", strict: true, schema },
+    },
+    temperature: 0.4,
+    max_tokens: 300,
+  };
+
+  let res: any;
+  try {
+    res = await postJson(GROQ_CHAT_URL, { Authorization: "Bearer " + env.groqApiKey() }, body, 45000);
+  } catch {
+    res = await postJson(
+      GROQ_CHAT_URL,
+      { Authorization: "Bearer " + env.groqApiKey() },
+      { ...body, model: FALLBACK_REASONING_MODEL },
+      45000
+    );
+  }
+  const content = res?.choices?.[0]?.message?.content ?? "";
+  const raw = typeof content === "string" ? parseJsonLoose(content) : content;
+  const parsed = raw as { name?: unknown; description?: unknown };
+  const name = typeof parsed?.name === "string" ? parsed.name.trim().slice(0, 60) : "";
+  const description =
+    typeof parsed?.description === "string" ? parsed.description.trim().slice(0, 200) : "";
+  if (!name) throw new Error("collection synthesis returned no name");
+  return { name, description };
+}

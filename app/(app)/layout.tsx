@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -19,7 +20,17 @@ export default async function AppLayout({
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur">
         <div className="mx-auto flex h-14 max-w-2xl items-center justify-between px-4">
-          <span className="text-sm font-semibold tracking-tight">ScreenView</span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-semibold tracking-tight">ScreenView</span>
+            <nav className="flex items-center gap-3 text-xs text-neutral-500">
+              <Link href="/memories" className="hover:text-neutral-900">
+                Memories
+              </Link>
+              <Link href="/collections" className="hover:text-neutral-900">
+                Collections
+              </Link>
+            </nav>
+          </div>
           <form action="/auth/signout" method="post">
             <button
               type="submit"
