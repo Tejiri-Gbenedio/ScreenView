@@ -25,3 +25,7 @@ Thumbs.db
 # Misc
 coverage/
 *.tsbuildinfo
+
+# Supabase local state
+supabase/.temp/
+supabase/.branches/
