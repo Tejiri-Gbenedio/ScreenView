@@ -18,7 +18,7 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 - **Phase 6 — Personal Learning Architecture:** complete — see [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md).
 - **Phase 7 — Interface & UX Architecture:** complete — see [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md).
 - **Phase 8 — Build Plan & V1 Implementation:** complete — see [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md).
-- **Phase 9 — Actual Implementation: in progress** — app foundation, capture flow, processing pipeline and memory UI in place; live at https://screenview-two.vercel.app.
+- **Phase 9 — Actual Implementation: in progress** — app foundation, capture flow, processing pipeline and memory UI in place; live at https://screenview-two.vercel.app — M1 (capture → private storage → AI pipeline → memory) verified end-to-end in production on 2026-09-29.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
