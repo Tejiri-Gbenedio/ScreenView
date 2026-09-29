@@ -47,7 +47,7 @@ export async function completeCapture(userId: string, captureId: string, fileHas
   const supabase = createClient();
   const { data: capture, error } = await supabase
     .from("captures")
-    .select("id, storage_path, processing_status")
+    .select("id, storage_path, processing_status, attempt_count")
     .eq("id", captureId)
     .single();
   if (error || !capture) throw new Error("capture not found");
@@ -66,15 +66,20 @@ export async function completeCapture(userId: string, captureId: string, fileHas
     .eq("id", captureId);
   if (updateError) throw new Error(updateError.message);
 
-  await enqueueProcessing(captureId);
+  await enqueueProcessing(captureId, capture.attempt_count ?? 0);
   return { status: "uploaded" };
 }
 
-export async function enqueueProcessing(captureId: string) {
+export async function enqueueProcessing(captureId: string, attemptCount = 0) {
   if (env.processingPaused()) return { enqueued: false, reason: "paused" };
   try {
+    // Attempt-aware event id: the first enqueue uses the stable id (duplicate
+    // completions dedupe), but retries MUST be re-triggerable — Inngest ignores
+    // duplicate event ids for 24h, so each retry sends a fresh id.
+    const eventId =
+      attemptCount > 0 ? `capture-${captureId}-r${attemptCount}` : `capture-${captureId}`;
     await inngest.send({
-      id: `capture-${captureId}`,
+      id: eventId,
       name: "capture/complete",
       data: { captureId },
     });
@@ -105,7 +110,7 @@ export async function retryCapture(userId: string, captureId: string) {
     .from("captures")
     .update({ processing_status: "uploaded", last_error: null })
     .eq("id", captureId);
-  await enqueueProcessing(captureId);
+  await enqueueProcessing(captureId, capture.attempt_count ?? 0);
   return { status: "uploaded" };
 }
 
