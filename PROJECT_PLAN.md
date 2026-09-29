@@ -26,7 +26,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 3 | AI Architecture | Complete |
 | 4 | Application & Processing Architecture | Complete |
 | 5 | Personal Assistant / PA Architecture | Complete |
-| 6 | Personal Learning | Pending |
+| 6 | Personal Learning | Complete |
 | 7 | Interface & UX | Pending |
 | 8 | Build Plan & V1 Implementation | Pending |
 | 9 | Testing & Iteration | Pending |
@@ -118,7 +118,24 @@ Status: **Complete.** Output: [`docs/phase-5-personal-assistant-architecture.md`
 - **Storage:** one new table (`pa_reports`) + `memories.pa_state` + `collections.kind` — documented, not executed.
 - **Delivery:** in-app only (no email/push in V1); future conversational PA boundary defined (grounded Q&A, not built).
 
-## Technology stack (locked through Phase 5)
+## Phase 6 — Personal Learning Architecture
+
+Status: **Complete.** Output: [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md).
+
+**Locked learning architecture:**
+
+- **Definition:** five distinct categories — static facts · explicit preferences · inferred patterns · temporary behavior · AI inference; AI inference is never evidence and never silently becomes a preference.
+- **Signals:** full taxonomy with per-signal teaching scope, strength (explicit > confirmed > passive), influence duration and evidence bars — defaults tunable.
+- **Correction loop:** cases → classes → tentative → established; single corrections never become rules; ≥3 similar across ≥2 distinct captures/days to begin influencing.
+- **Confidence & decay:** weighted evidence + diversity requirements; half-life decay by scope; expiry below floor; reinforcement/reactivation; explicit statements supersede, never silently.
+- **Loop safeguards:** AI-origin weight 0 · exposure ≠ evidence · accepted suggestions discounted (×0.4) · diversity required · suppressions decay.
+- **Injection point:** only at GPT-OSS reasoning — a ≤5–6-line personal-context bundle (labeled [explicit]/[learned]); vision, embeddings and retrieval stay objective.
+- **Suppressions:** connection types, collection signatures and PA kinds are scoped, decaying, and never permanent (except stored per-pair facts and user statements).
+- **Schema:** one new table (`learned_patterns`) + documented conventions — nothing else; nothing executed.
+- **Jobs:** synchronous deterministic ingest + one daily consolidation step (no new infrastructure).
+- **User control & explainability:** every pattern retains evidence refs; inspect/correct/reject/reset/opt-out paths are architecturally ready (UI later).
+
+## Technology stack (locked through Phase 6)
 
 | Area | Candidate |
 |---|---|
@@ -129,6 +146,7 @@ Status: **Complete.** Output: [`docs/phase-5-personal-assistant-architecture.md`
 | Vector search | pgvector |
 | Job / background processing | ✅ Locked (P4): Inngest — durable steps, retries, concurrency caps, cron |
 | PA / proactive layer | ✅ Locked (P5): scheduled detector → synthesis pipeline (Mon/Thu); one `pa_reports` table; in-app delivery |
+| Learning layer | ✅ Locked (P6): one `learned_patterns` table; deterministic aggregation + decay; soft context into reasoning (no fine-tuning) |
 | Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
 | Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
 | Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
@@ -144,3 +162,4 @@ The stack is locked through Phase 4 (AI models verified in Phase 3; application/
 - **2026-09-28 — Phase 3 (AI Architecture):** AI architecture defined in [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md) — models verified against provider docs and locked (Groq qwen3.8-27b vision · Groq gpt-oss-120b reasoning · NVIDIA embed-vl 2048-d), contracts + fallbacks + failure handling defined; nothing implemented. Next: Phase 4 — Application & Processing Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 4 (Application & Processing Architecture):** application & processing architecture defined in [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md) — Next.js on Vercel, direct-to-storage uploads, Inngest job layer, state machine + idempotency + security + cost controls; nothing implemented. Next: Phase 5 — Personal Assistant / PA Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 5 (Personal Assistant / PA Architecture):** PA architecture defined in [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md) — 4 V1 capabilities, reminder/pattern/project logic, fact-vs-inference-vs-suggestion discipline, deterministic-first generation, `pa_reports` storage decision, in-app delivery; nothing implemented. Next: Phase 6 — Personal Learning Architecture (awaiting go-ahead).
+- **2026-09-29 — Phase 6 (Personal Learning Architecture):** learning architecture defined in [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md) — signal taxonomy, evidence/confidence/decay model, feedback-loop safeguards, one new `learned_patterns` table, GPT-OSS context injection; nothing implemented. Next: Phase 7 — Interface & UX (awaiting go-ahead).
