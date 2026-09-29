@@ -223,6 +223,21 @@ export function MemoriesClient({ items }: { items: ListItem[] }) {
         />
       </div>
 
+      <form method="get" action="/memories" className="flex gap-2">
+        <input
+          type="search"
+          name="q"
+          placeholder="Search memories — try “that perfume I wanted to try”"
+          className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900"
+        />
+        <button
+          type="submit"
+          className="shrink-0 rounded-xl border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-700 hover:border-neutral-500 hover:text-neutral-900"
+        >
+          Search
+        </button>
+      </form>
+
       {notice ? (
         <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
           <span>{notice}</span>

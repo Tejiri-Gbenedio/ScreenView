@@ -38,6 +38,14 @@ export const INTENT_SOURCES = [
   "unknown",
 ] as const;
 
+export const STATUSES = [
+  "new",
+  "active",
+  "completed",
+  "dismissed",
+  "archived",
+] as const;
+
 const lenient = z.unknown().optional();
 
 export const PerceptionSchema = z.object({

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ACTIONS, INTENTS, STATUSES } from "@/server/ai/contracts";
 
 /** Shared request/file validation for API routes. */
 
@@ -39,3 +40,24 @@ export const CorrectionSchema = z.object({
 export type CorrectionInput = z.infer<typeof CorrectionSchema>;
 
 export const DAILY_CAPTURE_CAP = 200;
+
+// ------------------------------------------------------------------ search
+
+export const MAX_SEARCH_QUERY_LEN = 300;
+
+/**
+ * M2 search request: a natural-language query and/or deterministic filters.
+ * Empty query with no filters is rejected (the UI shows normal browsing instead).
+ */
+export const SearchRequestSchema = z
+  .object({
+    query: z.string().max(MAX_SEARCH_QUERY_LEN).optional().default(""),
+    intent: z.enum(INTENTS).optional(),
+    topic: z.string().min(1).max(80).optional(),
+    action: z.enum(ACTIONS).optional(),
+    status: z.enum(STATUSES).optional(),
+  })
+  .refine((v) => v.query.trim().length > 0 || Boolean(v.intent || v.topic || v.action || v.status), {
+    message: "Provide a query or at least one filter",
+  });
+export type SearchRequestInput = z.infer<typeof SearchRequestSchema>;
