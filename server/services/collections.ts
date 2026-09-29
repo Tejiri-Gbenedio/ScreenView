@@ -248,6 +248,8 @@ export function detectCandidateSets(
 
 export type CollectionsDeps = {
   getClient?: () => Promise<any>;
+  /** Job context: run for this user id (with an admin client) instead of the session user. */
+  userId?: string;
   synthesize?: (input: {
     members: Array<{ title: string | null; topic: string | null; intent: string | null; action: string | null }>;
     signals: string[];
@@ -274,10 +276,14 @@ export type DiscoveryResult = {
 export async function runDiscovery(deps: CollectionsDeps = {}): Promise<DiscoveryResult> {
   const client = await (deps.getClient ?? defaultUserClient)();
   const synthesize = deps.synthesize ?? synthesizeCollection;
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user) return { created: [], skipped: "unauthorized" };
+  let userId = deps.userId;
+  if (!userId) {
+    const {
+      data: { user },
+    } = await client.auth.getUser();
+    if (!user) return { created: [], skipped: "unauthorized" };
+    userId = user.id;
+  }
 
   const now = Date.now();
   const since = new Date(now - DETECTION_WINDOW_DAYS * DAY_MS).toISOString();
@@ -285,7 +291,7 @@ export async function runDiscovery(deps: CollectionsDeps = {}): Promise<Discover
   const { data: memRows } = await client
     .from("memories")
     .select("id, capture_id, title, topic, current_intent, suggested_action, created_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .gte("created_at", since)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -317,14 +323,14 @@ export async function runDiscovery(deps: CollectionsDeps = {}): Promise<Discover
   const { data: connRows } = await client
     .from("connections")
     .select("source_memory_id, target_memory_id, relationship_type, state")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .limit(500);
   const connections: ConnectionLite[] = (connRows ?? []) as ConnectionLite[];
 
   const { data: existing } = await client
     .from("collections")
     .select("id, name, state, kind, basis, updated_at")
-    .eq("user_id", user.id)
+    .eq("user_id", userId)
     .limit(200);
   const existingCollections = existing ?? [];
 
@@ -419,7 +425,7 @@ export async function runDiscovery(deps: CollectionsDeps = {}): Promise<Discover
       const res = await client
         .from("collections")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           name: attemptName,
           description,
           origin: "ai_suggested",
@@ -448,7 +454,7 @@ export async function runDiscovery(deps: CollectionsDeps = {}): Promise<Discover
 
     const { error: memberError } = await client.from("collection_members").insert(
       candidate.members.map((m) => ({
-        user_id: user.id,
+        user_id: userId,
         collection_id: inserted.id,
         memory_id: m.id,
         state: "suggested",

@@ -16,6 +16,14 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  const { data: latestReports } = await supabase
+    .from("pa_reports")
+    .select("id, seen_at")
+    .eq("user_id", user.id)
+    .order("generated_at", { ascending: false })
+    .limit(1);
+  const unseenReport = Boolean(latestReports?.[0] && !latestReports[0].seen_at);
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/80 backdrop-blur">
@@ -28,6 +36,12 @@ export default async function AppLayout({
               </Link>
               <Link href="/collections" className="hover:text-neutral-900">
                 Collections
+              </Link>
+              <Link href="/assistant" className="relative hover:text-neutral-900">
+                Assistant
+                {unseenReport ? (
+                  <span className="absolute -right-2 -top-1 h-1.5 w-1.5 rounded-full bg-neutral-900" />
+                ) : null}
               </Link>
             </nav>
           </div>

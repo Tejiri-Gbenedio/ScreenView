@@ -381,3 +381,79 @@ export async function synthesizeCollection(input: {
   if (!name) throw new Error("collection synthesis returned no name");
   return { name, description };
 }
+
+// ---------------------------------------------------------------- PA wording
+
+const PA_SYSTEM = `You are the quiet wording layer of ScreenView's Personal Assistant. You receive items that were already selected deterministically (code decided what to surface). You ONLY write wording for them.
+
+RULES:
+- One short wording per item (max ~200 characters). Ground EVERYTHING in the provided evidence.
+- Reminder items: quote the user's own note when provided (You said: "...") + a gentle question (Still interested? / Still on your list?). ONLY the literal words of the note may appear inside quotes.
+- Pattern items: hedged observation starting with "ScreenView noticed" + a light suggestion to group them. Never state it as a fact about the user.
+- Project items: hedged ("these saves may be converging on something to build") + suggest making it a project.
+- Recall items: one factual lead (e.g., "You saved this N days ago.") + why it resurfaced (e.g., related to something saved this week).
+- NEVER use: "you want", "you plan", "you're interested in", "you need".
+- NEVER invent memories, dates, numbers (only ages/counts provided), actions, or quotes.
+- Return only JSON: { "items": [ { "id": string, "wording": string } ] }`;
+
+export async function composePaReport(input: {
+  items: Array<{
+    id: string;
+    kind: string;
+    claim_type: string;
+    evidence: Array<{ title: string | null; note: string | null; age_days: number; topic: string | null }>;
+    context?: Record<string, unknown>;
+  }>;
+}): Promise<{ items: Array<{ id: string; wording: string }> }> {
+  const schema = {
+    type: "object",
+    additionalProperties: false,
+    required: ["items"],
+    properties: {
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["id", "wording"],
+          properties: { id: { type: "string" }, wording: { type: "string" } },
+        },
+      },
+    },
+  } as const;
+
+  const body = {
+    model: env.reasoningModelId(),
+    messages: [
+      { role: "system", content: PA_SYSTEM },
+      { role: "user", content: JSON.stringify(input.items) },
+    ],
+    response_format: {
+      type: "json_schema",
+      json_schema: { name: "pa_wording", strict: true, schema },
+    },
+    temperature: 0.4,
+    max_tokens: 900,
+  };
+
+  let res: any;
+  try {
+    res = await postJson(GROQ_CHAT_URL, { Authorization: "Bearer " + env.groqApiKey() }, body, 45000);
+  } catch {
+    res = await postJson(
+      GROQ_CHAT_URL,
+      { Authorization: "Bearer " + env.groqApiKey() },
+      { ...body, model: FALLBACK_REASONING_MODEL },
+      45000
+    );
+  }
+  const content = res?.choices?.[0]?.message?.content ?? "";
+  const raw = typeof content === "string" ? parseJsonLoose(content) : content;
+  const items = (raw as any)?.items;
+  if (!Array.isArray(items)) throw new Error("PA wording returned no items");
+  return {
+    items: items
+      .filter((x: any) => x && typeof x.id === "string" && typeof x.wording === "string")
+      .map((x: any) => ({ id: x.id as string, wording: (x.wording as string).trim() })),
+  };
+}
