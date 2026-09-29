@@ -27,7 +27,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 4 | Application & Processing Architecture | Complete |
 | 5 | Personal Assistant / PA Architecture | Complete |
 | 6 | Personal Learning | Complete |
-| 7 | Interface & UX | Pending |
+| 7 | Interface & UX | Complete |
 | 8 | Build Plan & V1 Implementation | Pending |
 | 9 | Testing & Iteration | Pending |
 
@@ -135,7 +135,24 @@ Status: **Complete.** Output: [`docs/phase-6-personal-learning-architecture.md`]
 - **Jobs:** synchronous deterministic ingest + one daily consolidation step (no new infrastructure).
 - **User control & explainability:** every pattern retains evidence refs; inspect/correct/reject/reset/opt-out paths are architecturally ready (UI later).
 
-## Technology stack (locked through Phase 6)
+## Phase 7 — Interface & UX Architecture
+
+Status: **Complete.** Output: [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md).
+
+**Locked UX architecture:**
+
+- **Navigation:** 3 areas (Memories · Collections · Assistant) + one Capture action; Settings via avatar. Search is a mode of Memories — no separate destination.
+- **Capture:** frictionless everywhere — drag-drop/paste/picker (desktop), camera/library + bottom sheet (mobile); optional note; one Save; in-place states (Uploading → Understanding… → Ready / Retry).
+- **Memory card/detail:** three-tier card (thumbnail + title + intent chip; richer info on space); detail separates **You said** from **ScreenView thinks**, with context + history sections.
+- **Corrections:** one-tap pickers (intent/topic/action/status), inline title/summary edits, note edits (R1); no schema knowledge required; natural-language correction deferred.
+- **Collections/connections:** suggestions stay labeled; no graph visualization in V1; multiple membership via chips; projects badged.
+- **Search/recall:** NL semantic search + filter chips; works without exact words; calm empty/error states.
+- **PA surface:** latest report (Needs Attention / Emerging / Everything Else), ≤5 items, claim labels + evidence chips, 1-tap actions; quiet periods show a calm line; unseen dot only; in-app only.
+- **States everywhere:** empty states teach; failures reassure (“Your screenshot and note are safe”) with one-tap retry; nothing technical ever exposed.
+- **Journeys A–J + 8-screen inventory** documented; onboarding = one skippable screen; first-session value demonstrated in under two minutes.
+- **Refinement (documented, not executed):** R1 — `memory_events.event_type` gains `'note_change'`.
+
+## Technology stack (locked through Phase 7)
 
 | Area | Candidate |
 |---|---|
@@ -147,6 +164,7 @@ Status: **Complete.** Output: [`docs/phase-6-personal-learning-architecture.md`]
 | Job / background processing | ✅ Locked (P4): Inngest — durable steps, retries, concurrency caps, cron |
 | PA / proactive layer | ✅ Locked (P5): scheduled detector → synthesis pipeline (Mon/Thu); one `pa_reports` table; in-app delivery |
 | Learning layer | ✅ Locked (P6): one `learned_patterns` table; deterministic aggregation + decay; soft context into reasoning (no fine-tuning) |
+| Interface / UX | ✅ Locked (P7): capture-first 3-area nav; “You said vs ScreenView thinks” language; in-app PA; mobile + desktop defined |
 | Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
 | Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
 | Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
@@ -163,3 +181,4 @@ The stack is locked through Phase 4 (AI models verified in Phase 3; application/
 - **2026-09-29 — Phase 4 (Application & Processing Architecture):** application & processing architecture defined in [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md) — Next.js on Vercel, direct-to-storage uploads, Inngest job layer, state machine + idempotency + security + cost controls; nothing implemented. Next: Phase 5 — Personal Assistant / PA Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 5 (Personal Assistant / PA Architecture):** PA architecture defined in [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md) — 4 V1 capabilities, reminder/pattern/project logic, fact-vs-inference-vs-suggestion discipline, deterministic-first generation, `pa_reports` storage decision, in-app delivery; nothing implemented. Next: Phase 6 — Personal Learning Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 6 (Personal Learning Architecture):** learning architecture defined in [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md) — signal taxonomy, evidence/confidence/decay model, feedback-loop safeguards, one new `learned_patterns` table, GPT-OSS context injection; nothing implemented. Next: Phase 7 — Interface & UX (awaiting go-ahead).
+- **2026-09-29 — Phase 7 (Interface & UX Architecture):** UX architecture defined in [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md) — navigation, capture experience, memory card/detail, corrections, search, PA surface, states, journeys, screen inventory; nothing implemented. Next: Phase 8 — Build Plan & V1 Implementation (awaiting go-ahead).
