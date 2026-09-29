@@ -14,5 +14,6 @@ Phase documentation lives here: product definition, data & memory architecture, 
 - [Phase 5 — Personal Assistant / PA Architecture](./phase-5-personal-assistant-architecture.md)
 - [Phase 6 — Personal Learning Architecture](./phase-6-personal-learning-architecture.md)
 - [Phase 7 — Interface & UX Architecture](./phase-7-interface-ux-architecture.md)
+- [Phase 8 — Build Plan & V1 Implementation](./phase-8-build-plan.md)
 
 _(Later phases will be added as they are completed.)_

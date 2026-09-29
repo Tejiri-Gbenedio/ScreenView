@@ -28,8 +28,8 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 5 | Personal Assistant / PA Architecture | Complete |
 | 6 | Personal Learning | Complete |
 | 7 | Interface & UX | Complete |
-| 8 | Build Plan & V1 Implementation | Pending |
-| 9 | Testing & Iteration | Pending |
+| 8 | Build Plan & V1 Implementation | Complete |
+| 9 | Actual Implementation | Pending |
 
 ## Phase 1 — Product Definition
 
@@ -152,7 +152,23 @@ Status: **Complete.** Output: [`docs/phase-7-interface-ux-architecture.md`](./do
 - **Journeys A–J + 8-screen inventory** documented; onboarding = one skippable screen; first-session value demonstrated in under two minutes.
 - **Refinement (documented, not executed):** R1 — `memory_events.event_type` gains `'note_change'`.
 
-## Technology stack (locked through Phase 7)
+## Phase 8 — Build Plan & V1 Implementation
+
+Status: **Complete.** Output: [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md).
+
+**Locked build plan:**
+
+- **V1 success:** the full loop works end-to-end for one person on phone + laptop — capture → processing → memory → corrections → search → connections → collections → PA → learning — with privacy and cost guards from day one.
+- **Tech stack:** Next.js + TypeScript + Tailwind on Vercel · Supabase (Postgres + pgvector + Storage + Auth) · Inngest jobs · Groq vision/reasoning (+ wired fallbacks) · NVIDIA embeddings; no analytics/monitoring vendors in V1.
+- **Repo:** single Next.js app — `app/` · `components/` · `lib/` · `server/` · `inngest/` · `supabase/` · `types/` · `tests/` · `docs/`.
+- **Stages (vertical slices):** Foundation → Capture → Processing → Memories → Search → Connections → Collections → PA → Learning → Polish; dependencies documented; **first milestone M1** = upload → process → memory → view.
+- **Sprints:** 10 content-defined sprints with objectives, deliverables, dependencies, risks.
+- **Schema order:** all tables in one forward-only migration set at Stage 1 (incl. every documented refinement R1–R4, A1–A3, `learned_patterns`); no destructive changes.
+- **Testing:** focused unit tests + integration invariants + E2E smoke + small AI-eval fixtures + manual device checklists.
+- **Costs:** ≈ $0.006–0.010/capture → ~$0.6–1.0 per 100 captures, ~$6–10 per 1,000; storage may justify Supabase Pro ($25/mo) past ~500 captures.
+- **Deployment:** local → preview (no prod jobs) → private V1; public not planned. Anti-scope list and readiness checklist included.
+
+## Technology stack (locked through Phase 8)
 
 | Area | Candidate |
 |---|---|
@@ -182,3 +198,4 @@ The stack is locked through Phase 4 (AI models verified in Phase 3; application/
 - **2026-09-29 — Phase 5 (Personal Assistant / PA Architecture):** PA architecture defined in [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md) — 4 V1 capabilities, reminder/pattern/project logic, fact-vs-inference-vs-suggestion discipline, deterministic-first generation, `pa_reports` storage decision, in-app delivery; nothing implemented. Next: Phase 6 — Personal Learning Architecture (awaiting go-ahead).
 - **2026-09-29 — Phase 6 (Personal Learning Architecture):** learning architecture defined in [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md) — signal taxonomy, evidence/confidence/decay model, feedback-loop safeguards, one new `learned_patterns` table, GPT-OSS context injection; nothing implemented. Next: Phase 7 — Interface & UX (awaiting go-ahead).
 - **2026-09-29 — Phase 7 (Interface & UX Architecture):** UX architecture defined in [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md) — navigation, capture experience, memory card/detail, corrections, search, PA surface, states, journeys, screen inventory; nothing implemented. Next: Phase 8 — Build Plan & V1 Implementation (awaiting go-ahead).
+- **2026-09-29 — Phase 8 (Build Plan & V1 Implementation):** build plan defined in [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md) — V1 success criteria, locked stack, repo layout, 10 stages + sprints, first milestone, testing strategy, risks, costs, deployment path, anti-scope; nothing implemented. Next: Phase 9 — Actual Implementation (awaiting go-ahead).

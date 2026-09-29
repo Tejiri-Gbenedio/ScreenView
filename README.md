@@ -17,7 +17,8 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 - **Phase 5 — Personal Assistant / PA Architecture:** complete — see [`docs/phase-5-personal-assistant-architecture.md`](./docs/phase-5-personal-assistant-architecture.md).
 - **Phase 6 — Personal Learning Architecture:** complete — see [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md).
 - **Phase 7 — Interface & UX Architecture:** complete — see [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md).
-- No application code yet (by design). Next up: Phase 8 — Build Plan & V1 Implementation.
+- **Phase 8 — Build Plan & V1 Implementation:** complete — see [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md).
+- No application code yet (by design). Next up: Phase 9 — Actual Implementation.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
