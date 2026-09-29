@@ -13,7 +13,8 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 - **Phase 1 — Product Definition:** complete — see [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md).
 - **Phase 2 — Data & Memory Architecture:** complete — see [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md).
 - **Phase 3 — AI Architecture:** complete — see [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md).
-- No application code yet (by design). Next up: Phase 4 — Application & Processing Architecture.
+- **Phase 4 — Application & Processing Architecture:** complete — see [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md).
+- No application code yet (by design). Next up: Phase 5 — Personal Assistant / PA Architecture.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
@@ -24,9 +25,9 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 4. **Collection** — meaningful collections emerge from usage; a capture can belong to several.
 5. **Action** — the PA helps you follow through (buy, research, try, build, read, …) at a calm weekly cadence.
 
-## Architecture direction (not locked)
+## Architecture (locked through Phase 4)
 
-GitHub → frontend + backend application (likely Vercel) → Supabase (Postgres, Storage, pgvector) → AI services: Groq (vision + reasoning) and NVIDIA (embeddings) — locked in Phase 3; fallbacks via OpenRouter where justified.
+GitHub → Next.js app on Vercel (frontend + API) → Supabase (Postgres, Storage, pgvector) → background processing via Inngest → AI services: Groq (vision + reasoning) and NVIDIA (embeddings); fallbacks via OpenRouter where justified.
 
 ScreenView is a real software application — it is **not** an n8n / Zapier / Make workflow project.
 

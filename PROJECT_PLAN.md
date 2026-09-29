@@ -1,6 +1,6 @@
 # ScreenView — Project Plan
 
-_Last updated: 2026-09-28_
+_Last updated: 2026-09-29_
 
 This document is the single source of truth for **what we are building, how we work, and where we are**. Detailed phase output lives in [`docs/`](./docs/).
 
@@ -24,7 +24,7 @@ A personal-first AI second brain built around screenshots. The user dumps screen
 | 1 | Product Definition | Complete |
 | 2 | Data & Memory Architecture | Complete |
 | 3 | AI Architecture | Complete |
-| 4 | Application & Processing Architecture | Pending |
+| 4 | Application & Processing Architecture | Complete |
 | 5 | Personal Assistant / PA Architecture | Pending |
 | 6 | Personal Learning | Pending |
 | 7 | Interface & UX | Pending |
@@ -84,21 +84,39 @@ Status: **Complete.** Output: [`docs/phase-3-ai-architecture.md`](./docs/phase-3
 - Privacy: Groq no-retention-by-default + self-serve ZDR (enable at impl); reasoning model never receives the raw image; OpenRouter off by default pending policy verification.
 - Model IDs are config, not code (Groq's vision slot churned 4× in 18 months — verified).
 
-## Technology direction (candidates — NOT locked)
+## Phase 4 — Application & Processing Architecture
+
+Status: **Complete.** Output: [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md).
+
+**Locked application & processing architecture (verified against platform docs on 2026-09-29):**
+
+- **Runtime split:** Next.js (App Router) on Vercel; the browser uploads + displays state only; all AI calls run server-side in durable job steps — keys never reach the client.
+- **Uploads:** direct browser → Supabase Storage via short-lived signed upload URLs (Vercel's 4.5MB body limit rules out server-proxied files); private bucket, `{user_id}/{capture_id}.{ext}` paths; ≤20MB; PNG/JPEG/WebP.
+- **Jobs:** **Inngest** selected (durable per-step retries, concurrency caps, cron, debounce; 50k executions/mo free) over Vercel Workflows (new; limits unverified), Trigger.dev (separate deploy surface), and Supabase-native queues/cron (heavy DIY). Job layer encapsulated — swappable.
+- **State machine:** `upload_pending → uploaded → processing → (retrying) → completed | failed`; DB-checkpointed steps make every stage resumable and idempotent; originals persist before any AI call.
+- **Batches:** one lifecycle per capture; concurrency cap 4 drains 1–100 uploads; batch-level connection sweep + collection discovery run as scheduled jobs, never per-capture.
+- **Sync vs async:** only URL issuance, byte upload and completion ack are synchronous; vision/reasoning/embeddings/sweeps/PA are all async.
+- **Status updates:** polling (~3s, terminal-stop) — Realtime deferred; no SSE/WebSockets.
+- **Security:** Supabase Auth sessions; RLS + private storage policies; service-role & provider keys server-only; validation + rate-limit concepts; cost guards (20MB files, 200 captures/day cap, retry caps, kill switch).
+- **No new tables** for jobs (captures operational columns + Inngest state); refinements documented: status CHECK extension, `attempt_count`/`last_error`/`last_attempt_at`, `memories.perception jsonb`, action vocab — none executed.
+- **PA runs as a scheduled job** (Mon & Thu); its report storage is flagged as the one genuinely necessary new table, finalized in Phase 5.
+
+## Technology stack (locked through Phase 4)
 
 | Area | Candidate |
 |---|---|
-| Frontend | Modern responsive web app / PWA — likely deployed on Vercel |
-| Backend | Application backend/API — likely on Vercel initially |
+| Frontend | ✅ Locked (P4): Next.js (App Router) + TypeScript — Vercel |
+| Backend | ✅ Locked (P4): Next.js route handlers (Vercel) + Postgres RPCs |
 | Database | Supabase / Postgres |
 | File storage | Supabase Storage |
 | Vector search | pgvector |
+| Job / background processing | ✅ Locked (P4): Inngest — durable steps, retries, concurrency caps, cron |
 | Vision / screenshot understanding | ✅ Locked (P3): Groq `qwen/qwen3.8-27b` · fallback OpenRouter `qwen/qwen3-vl-8b-instruct` |
 | Reasoning / memory interpretation | ✅ Locked (P3): Groq `openai/gpt-oss-120b` (strict structured outputs) · fallbacks `gpt-oss-20b` / OpenRouter |
 | Multimodal embeddings | ✅ Locked (P3): NVIDIA `llama-nemotron-embed-vl-1b-v2` — 2048-d, hosted NIM, self-host option |
 | Fallback models | ✅ Locked (P3): minimal set (see Phase 3 §17); Gemma documented, not in V1 chain |
 
-The AI stack was evaluated against live provider documentation and locked in Phase 3. Frontend/backend/deployment candidates are evaluated and finalized in Phase 4. **No integrations before the build phase.**
+The stack is locked through Phase 4 (AI models verified in Phase 3; application/platform choices verified in Phase 4). **No integrations before the build phase.**
 
 ## Phase log
 
@@ -106,3 +124,4 @@ The AI stack was evaluated against live provider documentation and locked in Pha
 - **2026-09-28 — Phase 1 (Product Definition):** product definition documented in [`docs/phase-1-product-definition.md`](./docs/phase-1-product-definition.md); no application code (by design). Next: Phase 2 — Data & Memory Architecture (awaiting go-ahead).
 - **2026-09-28 — Phase 2 (Data & Memory Architecture):** data model defined in [`docs/phase-2-data-memory-architecture.md`](./docs/phase-2-data-memory-architecture.md) — 7-table greenfield design, reference DDL only, nothing executed. Next: Phase 3 — AI Architecture (awaiting go-ahead).
 - **2026-09-28 — Phase 3 (AI Architecture):** AI architecture defined in [`docs/phase-3-ai-architecture.md`](./docs/phase-3-ai-architecture.md) — models verified against provider docs and locked (Groq qwen3.8-27b vision · Groq gpt-oss-120b reasoning · NVIDIA embed-vl 2048-d), contracts + fallbacks + failure handling defined; nothing implemented. Next: Phase 4 — Application & Processing Architecture (awaiting go-ahead).
+- **2026-09-29 — Phase 4 (Application & Processing Architecture):** application & processing architecture defined in [`docs/phase-4-application-processing-architecture.md`](./docs/phase-4-application-processing-architecture.md) — Next.js on Vercel, direct-to-storage uploads, Inngest job layer, state machine + idempotency + security + cost controls; nothing implemented. Next: Phase 5 — Personal Assistant / PA Architecture (awaiting go-ahead).
