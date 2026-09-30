@@ -393,11 +393,50 @@ function MemoryCard({ item, onRetry }: { item: ListItem; onRetry: (captureId: st
     <div className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white p-3">
       {thumbnail}
       {body}
-      {item.status === "failed" ? (
-        <button onClick={() => onRetry(item.captureId)} className="shrink-0 text-xs underline">
-          Retry
-        </button>
-      ) : null}
+      <div className="flex shrink-0 flex-col items-end gap-1.5">
+        {item.status === "failed" ? (
+          <button onClick={() => onRetry(item.captureId)} className="text-xs underline">
+            Retry
+          </button>
+        ) : null}
+        <MiniDelete captureId={item.captureId} />
+      </div>
     </div>
+  );
+}
+
+function MiniDelete({ captureId }: { captureId: string }) {
+  const router = useRouter();
+  const [confirm, setConfirm] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function del() {
+    setBusy(true);
+    try {
+      await fetch(`/api/captures/${captureId}`, { method: "DELETE" });
+    } finally {
+      router.refresh();
+      setBusy(false);
+    }
+  }
+
+  if (confirm) {
+    return (
+      <button
+        onClick={del}
+        disabled={busy}
+        className="text-xs text-red-600 underline disabled:opacity-40"
+      >
+        {busy ? "Deleting…" : "Confirm?"}
+      </button>
+    );
+  }
+  return (
+    <button
+      onClick={() => setConfirm(true)}
+      className="text-xs text-neutral-400 underline hover:text-red-600"
+    >
+      Delete
+    </button>
   );
 }

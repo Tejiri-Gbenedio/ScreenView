@@ -5,6 +5,7 @@ import { signedUrlMap } from "@/server/services/storage";
 import { CorrectionChips } from "@/components/memory/CorrectionChips";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { ConnectionActions } from "@/components/memory/ConnectionActions";
+import { DeleteMemoryButton } from "@/components/memory/DeleteMemoryButton";
 import { listConnectionsForMemory } from "@/server/services/connections";
 import { collectionsForMemory } from "@/server/services/collections";
 import { RELATIONSHIP_LABELS, relativeTime } from "@/lib/labels";
@@ -173,6 +174,10 @@ export default async function MemoryDetailPage({ params }: { params: { id: strin
           </ul>
         </section>
       ) : null}
+
+      <section className="pt-2">
+        <DeleteMemoryButton captureId={capture.id} />
+      </section>
     </div>
   );
 }
