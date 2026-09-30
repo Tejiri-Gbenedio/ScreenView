@@ -77,6 +77,7 @@ export default async function MemoriesPage({ searchParams }: { searchParams?: Se
               type="search"
               name="q"
               defaultValue={query}
+              aria-label="Search memories"
               placeholder="Describe what you're looking for…"
               className="w-full rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
             />

@@ -13,8 +13,9 @@ export async function DELETE(_request: Request, { params }: { params: { id: stri
     const result = await deleteCapture(user.id, params.id);
     return NextResponse.json(result);
   } catch (error) {
+    console.error("delete failed:", (error as Error).message);
     return NextResponse.json(
-      { error: "delete_failed", message: (error as Error).message },
+      { error: "delete_failed", message: "Couldn't delete this item. Please try again." },
       { status: 400 }
     );
   }

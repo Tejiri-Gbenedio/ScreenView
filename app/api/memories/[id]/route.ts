@@ -26,7 +26,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   });
 
   if (error) {
-    return NextResponse.json({ error: "correction_failed", message: error.message }, { status: 400 });
+    console.error("correction failed:", error.message);
+    return NextResponse.json(
+      { error: "correction_failed", message: "Couldn't apply that change. Please try again." },
+      { status: 400 }
+    );
   }
   return NextResponse.json({ memory: data });
 }

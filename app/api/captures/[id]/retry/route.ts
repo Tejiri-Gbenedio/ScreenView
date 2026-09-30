@@ -13,8 +13,9 @@ export async function POST(_request: Request, { params }: { params: { id: string
     const result = await retryCapture(user.id, params.id);
     return NextResponse.json(result);
   } catch (error) {
+    console.error("retry failed:", (error as Error).message);
     return NextResponse.json(
-      { error: "retry_failed", message: (error as Error).message },
+      { error: "retry_failed", message: "Couldn't restart processing. Please try again." },
       { status: 400 }
     );
   }

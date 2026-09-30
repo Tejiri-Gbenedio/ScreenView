@@ -31,8 +31,9 @@ export async function POST(request: Request) {
     const result = await createCapture(user.id, parsed.data);
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
+    console.error("capture failed:", (error as Error).message);
     return NextResponse.json(
-      { error: "capture_failed", message: (error as Error).message },
+      { error: "capture_failed", message: "Couldn't start the upload. Please try again." },
       { status: 500 }
     );
   }

@@ -20,8 +20,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const result = await completeCapture(user.id, params.id, parsed.data.file_hash.toLowerCase());
     return NextResponse.json(result);
   } catch (error) {
+    console.error("complete failed:", (error as Error).message);
     return NextResponse.json(
-      { error: "complete_failed", message: (error as Error).message },
+      { error: "complete_failed", message: "Couldn't finish the upload. Please try again." },
       { status: 400 }
     );
   }

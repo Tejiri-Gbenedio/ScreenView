@@ -227,6 +227,7 @@ export function MemoriesClient({ items }: { items: ListItem[] }) {
         <input
           type="search"
           name="q"
+          aria-label="Search memories"
           placeholder="Search memories — try “that perfume I wanted to try”"
           className="w-full rounded-xl border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-neutral-900"
         />
@@ -239,7 +240,10 @@ export function MemoriesClient({ items }: { items: ListItem[] }) {
       </form>
 
       {notice ? (
-        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800">
+        <div
+          role="status"
+          className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-800"
+        >
           <span>{notice}</span>
           <button onClick={() => setNotice(null)} className="ml-3 shrink-0">
             ✕
@@ -311,6 +315,7 @@ export function MemoriesClient({ items }: { items: ListItem[] }) {
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
+              aria-label="Note (optional) — why are you saving this?"
               placeholder="Add a note (optional) — why are you saving this?"
               className="mt-3 w-full resize-none rounded-xl border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900"
             />
@@ -338,6 +343,9 @@ export function MemoriesClient({ items }: { items: ListItem[] }) {
 }
 
 function MemoryCard({ item, onRetry }: { item: ListItem; onRetry: (captureId: string) => void }) {
+  const stuck =
+    (item.status === "uploaded" || item.status === "processing") &&
+    Date.now() - new Date(item.createdAt).getTime() > 120000;
   const thumbnail = (
     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-neutral-100">
       {item.signedUrl ? (
@@ -368,7 +376,11 @@ function MemoryCard({ item, onRetry }: { item: ListItem; onRetry: (captureId: st
         ) : null}
         {TRANSIENT.includes(item.status) ? (
           <span className="text-[11px] text-neutral-500">
-            {item.status === "processing" || item.status === "retrying" ? "Understanding…" : "Queued…"}
+            {stuck
+              ? "Taking longer than expected…"
+              : item.status === "processing" || item.status === "retrying"
+                ? "Understanding…"
+                : "Queued…"}
           </span>
         ) : null}
         {item.status === "failed" ? (
@@ -394,9 +406,9 @@ function MemoryCard({ item, onRetry }: { item: ListItem; onRetry: (captureId: st
       {thumbnail}
       {body}
       <div className="flex shrink-0 flex-col items-end gap-1.5">
-        {item.status === "failed" ? (
+        {item.status === "failed" || stuck ? (
           <button onClick={() => onRetry(item.captureId)} className="text-xs underline">
-            Retry
+            {stuck ? "Stuck? Retry" : "Retry"}
           </button>
         ) : null}
         <MiniDelete captureId={item.captureId} />
