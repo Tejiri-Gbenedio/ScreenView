@@ -70,14 +70,16 @@ export async function completeCapture(userId: string, captureId: string, fileHas
   return { status: "uploaded" };
 }
 
-export async function enqueueProcessing(captureId: string, attemptCount = 0) {
+export async function enqueueProcessing(captureId: string, attemptCount = 0, unique = false) {
   if (env.processingPaused()) return { enqueued: false, reason: "paused" };
   try {
     // Attempt-aware event id: the first enqueue uses the stable id (duplicate
     // completions dedupe), but retries MUST be re-triggerable — Inngest ignores
-    // duplicate event ids for 24h, so each retry sends a fresh id.
-    const eventId =
+    // duplicate event ids for 24h, so each retry sends a fresh id. Stuck-state
+    // recoveries pass unique=true (atomic claim makes double-delivery safe).
+    const base =
       attemptCount > 0 ? `capture-${captureId}-r${attemptCount}` : `capture-${captureId}`;
+    const eventId = unique ? `${base}-t${Date.now()}` : base;
     await inngest.send({
       id: eventId,
       name: "capture/complete",
@@ -92,25 +94,47 @@ export async function enqueueProcessing(captureId: string, attemptCount = 0) {
   }
 }
 
-export async function retryCapture(userId: string, captureId: string) {
-  const supabase = createClient();
+const STALE_PROCESSING_MS = 10 * 60 * 1000;
+
+export async function retryCapture(
+  userId: string,
+  captureId: string,
+  deps: { getClient?: () => any; enqueue?: typeof enqueueProcessing } = {}
+) {
+  const supabase = await (deps.getClient ? deps.getClient() : createClient());
+  const enqueue = deps.enqueue ?? enqueueProcessing;
   const { data: capture } = await supabase
     .from("captures")
-    .select("id, processing_status, attempt_count")
+    .select("id, processing_status, attempt_count, last_attempt_at")
     .eq("id", captureId)
     .single();
   if (!capture) throw new Error("capture not found");
-  if (capture.attempt_count >= 6) {
+  if ((capture.attempt_count ?? 0) >= 6) {
     return { status: capture.processing_status, error: "retry_limit_reached" };
   }
-  if (!["failed", "retrying"].includes(capture.processing_status)) {
-    return { status: capture.processing_status };
+
+  const status = capture.processing_status;
+  // Recovery paths for the rare stuck states (M6):
+  // - uploaded + never claimed: the initial enqueue send may have failed.
+  // - processing + stale: a run died between claim and outcome.
+  const enqueueNeverRan = status === "uploaded" && (capture.attempt_count ?? 0) === 0;
+  const staleProcessing =
+    status === "processing" &&
+    Boolean(capture.last_attempt_at) &&
+    Date.now() - Date.parse(capture.last_attempt_at) > STALE_PROCESSING_MS;
+
+  if (!["failed", "retrying"].includes(status) && !enqueueNeverRan && !staleProcessing) {
+    return { status };
   }
+
   await supabase
     .from("captures")
     .update({ processing_status: "uploaded", last_error: null })
     .eq("id", captureId);
-  await enqueueProcessing(captureId, capture.attempt_count ?? 0);
+  // failed/retrying retries keep the attempt-based deterministic id (dedupe on
+  // double-click); stuck-state recoveries use a unique id so a previously
+  // consumed id can never trap the capture (atomic claim prevents double work).
+  await enqueue(captureId, capture.attempt_count ?? 0, enqueueNeverRan || staleProcessing);
   return { status: "uploaded" };
 }
 
