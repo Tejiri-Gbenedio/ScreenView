@@ -18,7 +18,7 @@ ScreenView lets you dump screenshots (with an optional note) and lets the system
 - **Phase 6 — Personal Learning Architecture:** complete — see [`docs/phase-6-personal-learning-architecture.md`](./docs/phase-6-personal-learning-architecture.md).
 - **Phase 7 — Interface & UX Architecture:** complete — see [`docs/phase-7-interface-ux-architecture.md`](./docs/phase-7-interface-ux-architecture.md).
 - **Phase 8 — Build Plan & V1 Implementation:** complete — see [`docs/phase-8-build-plan.md`](./docs/phase-8-build-plan.md).
-- **Phase 9 — Actual Implementation: in progress** — app foundation, capture flow, processing pipeline, memory UI and semantic search in place; live at https://screenview-two.vercel.app — M1 (capture → private storage → AI pipeline → memory), M2 (natural-language search + filters) and M3 (connections + evidence-based collections) verified end-to-end in production on 2026-09-29.
+- **Phase 9 — Actual Implementation: in progress** — app foundation, capture flow, processing pipeline, memory UI, semantic search, connections/collections and the quiet personal assistant in place; live at https://screenview-two.vercel.app — M1 (capture → private storage → AI pipeline → memory), M2 (natural-language search + filters), M3 (connections + evidence-based collections) and M4 (scheduled personal assistant) verified end-to-end in production on 2026-09-29/30.
 - Full roadmap and working rules: [PROJECT_PLAN.md](./PROJECT_PLAN.md).
 
 ## How it is meant to work
@@ -54,6 +54,6 @@ npm test         # unit tests
 npm run build    # production build
 ```
 
-- **Processing jobs:** locally, run the Inngest dev server: `npx inngest-cli@latest dev -u http://localhost:3000/api/inngest`. In production, set `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY`.
+- **Processing jobs:** locally, run the Inngest dev server: `npx inngest-cli@latest dev -u http://localhost:3000/api/inngest`. In production, set `INNGEST_EVENT_KEY` + `INNGEST_SIGNING_KEY`. The personal-assistant report job runs **Monday + Thursday 18:00 WAT** (Inngest cron) — deterministic-first, at most one wording call per populated report, zero calls on quiet periods.
 - **⚠️ Embeddings dev note:** the `nvidia/llama-nemotron-embed-vl-1b-v2:free` endpoint (via OpenRouter) is a **development/testing provider** — its free tier logs inputs. Not for real private data long-term; the host is config-swappable (same model → no schema change).
 - **Deployment:** pushes to `main` auto-deploy on Vercel (repo connected).
