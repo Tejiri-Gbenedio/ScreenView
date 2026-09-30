@@ -321,13 +321,24 @@ async function phaseRun() {
   const tentId = await memoryIdByKey(a.id, "tent");
   const yogaId = await memoryIdByKey(a.id, "yoga");
   const scubaId = await memoryIdByKey(a.id, "scuba");
+  const pf1Id = await memoryIdByKey(a.id, "pf1");
+  const pf2Id = await memoryIdByKey(a.id, "pf2");
+  const pf3Id = await memoryIdByKey(a.id, "pf3");
 
   const reminders = items.filter((i) => i.kind === "reminder");
   const reminderIds = reminders.map((i) => i.memory_ids[0]);
   check("reminders: exactly 2 (cap)", reminders.length === 2, `${reminders.length}`);
-  check("reminder: keyboard shown (buy ≥14d)", reminderIds.includes(keyboardId));
-  check("reminder: tent shown (research ≥21d)", reminderIds.includes(tentId));
+  check(
+    "reminder: most overdue eligible pair shown (build 35d + 25d)",
+    reminderIds.includes(pf1Id) && reminderIds.includes(pf2Id),
+    reminderIds.map((x) => titleOf(x)).join(",")
+  );
   check("reminder: yoga NOT shown (try, 20d < 21d)", !reminderIds.includes(yogaId));
+  check("reminder: pf3 NOT shown (build, 15d < 21d)", !reminderIds.includes(pf3Id));
+  check(
+    "reminder: keyboard + tent eligible but cap-enforced (next wave)",
+    !reminderIds.includes(keyboardId) && !reminderIds.includes(tentId)
+  );
   check("reminder wording grounded in the note", reminders.every((i) => typeof i.wording === "string" && i.wording.length > 0 && i.claim_type === "fact"));
 
   const projectItem = items.find((i) => i.kind === "project_candidate");
@@ -344,10 +355,10 @@ async function phaseRun() {
 
   check("sections: Needs Attention / Emerging / Everything Else", JSON.stringify(sections.map((s) => s.key)) === JSON.stringify(["needs_attention", "emerging", "everything_else"]), sections.map((s) => s.key).join(","));
 
-  const { data: keyboardMemory } = await admin.from("memories").select("pa_state").eq("id", keyboardId).single();
-  const { data: tentMemory } = await admin.from("memories").select("pa_state").eq("id", tentId).single();
+  const { data: pf1Memory } = await admin.from("memories").select("pa_state").eq("id", pf1Id).single();
+  const { data: pf2Memory } = await admin.from("memories").select("pa_state").eq("id", pf2Id).single();
   const { data: scubaMemory } = await admin.from("memories").select("pa_state").eq("id", scubaId).single();
-  check("bookkeeping: last_reminded_at set", Boolean(keyboardMemory?.pa_state?.last_reminded_at && tentMemory?.pa_state?.last_reminded_at));
+  check("bookkeeping: last_reminded_at set", Boolean(pf1Memory?.pa_state?.last_reminded_at && pf2Memory?.pa_state?.last_reminded_at));
   check("bookkeeping: last_recall_at set", Boolean(scubaMemory?.pa_state?.last_recall_at));
 
   // UI: dot before visiting, calm page marks seen, dot after
@@ -381,31 +392,31 @@ async function phaseInteract() {
   const report = await latestReport(a.id);
   if (!report) throw new Error("no report found");
   const items = report.content?.items ?? [];
-  const keyboardId = await memoryIdByKey(a.id, "keyboard");
-  const tentId = await memoryIdByKey(a.id, "tent");
+  const pf1Id = await memoryIdByKey(a.id, "pf1");
+  const pf2Id = await memoryIdByKey(a.id, "pf2");
 
   const reminderOf = (memoryId) => items.find((i) => i.kind === "reminder" && i.memory_ids[0] === memoryId);
   const projectItem = items.find((i) => i.kind === "project_candidate");
 
   const complete = await api(cookieA, "/api/pa/items", {
     reportId: report.id,
-    itemId: reminderOf(keyboardId).id,
+    itemId: reminderOf(pf1Id).id,
     action: "complete",
   });
   check("complete action ok", complete.status === 200);
-  const { data: keyboardAfter } = await admin.from("memories").select("status").eq("id", keyboardId).single();
-  check("completed memory excluded (status=completed)", keyboardAfter?.status === "completed");
-  const { data: events } = await admin.from("memory_events").select("event_type, actor, reason").eq("memory_id", keyboardId).eq("actor", "user");
+  const { data: pf1After } = await admin.from("memories").select("status").eq("id", pf1Id).single();
+  check("completed memory excluded (status=completed)", pf1After?.status === "completed");
+  const { data: events } = await admin.from("memory_events").select("event_type, actor, reason").eq("memory_id", pf1Id).eq("actor", "user");
   check("completion recorded as a user event", (events ?? []).some((e) => e.event_type === "status_change"));
 
   const dismiss = await api(cookieA, "/api/pa/items", {
     reportId: report.id,
-    itemId: reminderOf(tentId).id,
+    itemId: reminderOf(pf2Id).id,
     action: "dismiss",
   });
   check("dismiss action ok", dismiss.status === 200);
-  const { data: tentAfter } = await admin.from("memories").select("status, pa_state").eq("id", tentId).single();
-  check("dismissed memory excluded (status=dismissed)", tentAfter?.status === "dismissed");
+  const { data: pf2After } = await admin.from("memories").select("status, pa_state").eq("id", pf2Id).single();
+  check("dismissed memory excluded (status=dismissed)", pf2After?.status === "dismissed");
 
   const patternItem = items.find((i) => i.kind === "pattern");
   if (patternItem) {
@@ -446,6 +457,51 @@ async function phaseInteract() {
 
 async function phaseRun2() {
   const a = await ensureUser(USER_A);
+  const cookieA = await sessionCookie(USER_A, a.password);
+
+  let failures = 0;
+  const check = (name, pass, detail = "") => {
+    log(`${pass ? "PASS" : "FAIL"} — ${name}${detail ? " | " + detail : ""}`);
+    if (!pass) failures += 1;
+  };
+
+  const keyboardId = await memoryIdByKey(a.id, "keyboard");
+  const tentId = await memoryIdByKey(a.id, "tent");
+  const pf1Id = await memoryIdByKey(a.id, "pf1");
+  const pf2Id = await memoryIdByKey(a.id, "pf2");
+
+  const before = await latestReport(a.id);
+  triggerPa(a.id);
+  const report2 = await waitForNewReport(a.id, before.id);
+  check("second report generated", Boolean(report2));
+  if (!report2) process.exit(9);
+
+  const items2 = report2.content?.items ?? [];
+  const reminderIds2 = items2.filter((i) => i.kind === "reminder").map((i) => i.memory_ids[0]);
+  check("resolved reminders never resurface (pf1 completed, pf2 dismissed)", !reminderIds2.includes(pf1Id) && !reminderIds2.includes(pf2Id));
+  check("next-most-overdue pair appears (keyboard + tent)", reminderIds2.includes(keyboardId) && reminderIds2.includes(tentId), `shown=${reminderIds2.length}`);
+  check("one wording call again", (report2.generation_meta ?? {}).llm_calls === 1, `llm_calls=${report2.generation_meta?.llm_calls}`);
+  check("completed/dismissed still excluded from this report", !items2.some((i) => i.memory_ids?.includes(pf1Id) || i.memory_ids?.includes(pf2Id)));
+
+  // interact2: complete keyboard, snooze tent (pa_state only)
+  const kItem = items2.find((i) => i.kind === "reminder" && i.memory_ids[0] === keyboardId);
+  const tItem = items2.find((i) => i.kind === "reminder" && i.memory_ids[0] === tentId);
+  const doneK = await api(cookieA, "/api/pa/items", { reportId: report2.id, itemId: kItem.id, action: "complete" });
+  const { data: kAfter } = await admin.from("memories").select("status").eq("id", keyboardId).single();
+  check("complete works on the next pair", doneK.status === 200 && kAfter?.status === "completed");
+  const snooze = await api(cookieA, "/api/pa/items", { reportId: report2.id, itemId: tItem.id, action: "snooze" });
+  const { data: tAfter } = await admin.from("memories").select("status, pa_state").eq("id", tentId).single();
+  check(
+    "snooze works (pa_state only — memory untouched)",
+    snooze.status === 200 && tAfter?.status !== "dismissed" && tAfter?.status !== "completed" && Boolean(tAfter?.pa_state?.snoozed_until)
+  );
+
+  log(failures === 0 ? "ALL RUN2 CHECKS PASSED" : `FAILURES: ${failures}`);
+  process.exit(failures === 0 ? 0 : 9);
+}
+
+async function phaseRun3() {
+  const a = await ensureUser(USER_A);
   const b = await ensureUser(USER_B);
   const cookieA = await sessionCookie(USER_A, a.password);
   const cookieB = await sessionCookie(USER_B, b.password);
@@ -458,23 +514,23 @@ async function phaseRun2() {
 
   const before = await latestReport(a.id);
   triggerPa(a.id);
-  const report2 = await waitForNewReport(a.id, before.id);
-  check("second report generated", Boolean(report2));
-  if (!report2) process.exit(9);
+  const report3 = await waitForNewReport(a.id, before.id);
+  check("third report generated", Boolean(report3));
+  if (!report3) process.exit(9);
 
-  check("quiet period: no items", report2.is_empty === true);
-  check("quiet period: ZERO LLM calls", (report2.generation_meta ?? {}).llm_calls === 0, `llm_calls=${report2.generation_meta?.llm_calls}`);
+  check("quiet period: no items", report3.is_empty === true);
+  check("quiet period: ZERO LLM calls", (report3.generation_meta ?? {}).llm_calls === 0, `llm_calls=${report3.generation_meta?.llm_calls}`);
 
   const quietPage = await html(cookieA, "/assistant");
   check("UI: calm quiet copy", quietPage.html.includes("Nothing needs your attention right now."));
 
-  // user B: zero memories → quiet; and no leakage of A's content
+  // RLS with user B
   triggerPa(b.id);
   const bReport = await waitForNewReport(b.id, null, 240000);
   check("RLS: user B gets their own (quiet) report", Boolean(bReport) && bReport.is_empty === true);
   const bPage = await html(cookieB, "/assistant");
   check("RLS: B never sees A's report content", !bPage.html.includes("Mechanical keyboard") && !bPage.html.includes("Camping tent"));
-  const bAttempt = await api(cookieB, "/api/pa/items", { reportId: report2.id, itemId: "x", action: "open" });
+  const bAttempt = await api(cookieB, "/api/pa/items", { reportId: report3.id, itemId: "x", action: "open" });
   check("RLS: B cannot fetch A's report items (404)", bAttempt.status === 404, `status=${bAttempt.status}`);
 
   // regressions (M1/M2/M3)
@@ -500,7 +556,7 @@ async function phaseRun2() {
   const collectionsPage = await html(cookieA, "/collections");
   check("M3: collections screen still works", collectionsPage.status === 200 && collectionsPage.html.includes("ScreenView noticed"));
 
-  log(failures === 0 ? "ALL RUN2 CHECKS PASSED" : `FAILURES: ${failures}`);
+  log(failures === 0 ? "ALL RUN3 CHECKS PASSED" : `FAILURES: ${failures}`);
   process.exit(failures === 0 ? 0 : 9);
 }
 
@@ -517,7 +573,7 @@ async function phaseCleanup() {
   log("CLEANUP DONE");
 }
 
-const phases = { seed: phaseSeed, run: phaseRun, interact: phaseInteract, run2: phaseRun2, cleanup: phaseCleanup };
+const phases = { seed: phaseSeed, run: phaseRun, interact: phaseInteract, run2: phaseRun2, run3: phaseRun3, cleanup: phaseCleanup };
 const fn = phases[PHASE];
 if (!fn) {
   console.error("unknown phase:", PHASE);
