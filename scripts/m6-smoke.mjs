@@ -215,7 +215,7 @@ async function phaseRun() {
     const { data } = await admin.from("memory_embeddings").select("model").eq("memory_id", c4.id).maybeSingle();
     return data ? { data } : null;
   }, 30000, "document embedding");
-  check("embedding: stored (searchable)", Boolean(c4emb?.data?.model));
+  check("embedding: stored (searchable)", Boolean(c4emb?.model));
 
   // ---- stage 2: searchable ----
   const search = await api(cookie, "/api/search", { query: "perfume I wanted to buy" });
