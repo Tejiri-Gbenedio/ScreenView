@@ -206,6 +206,7 @@ RULES:
 - Intent = why the user saved it: buy, research, try, build, read, watch, save_for_later, compare, contact, inspiration, unknown.
 - Action = the practical next step: buy, evaluate, test, build, read, watch, compare, contact, save_for_reference, none. Intent and action may differ (e.g. intent=research with action=buy for "worth buying?" notes).
 - Intent hierarchy: user_statement > strong_context > user_behavior > visual_inference > ai_inference. Never invent intent — use "unknown" when evidence is insufficient.
+- LEARNING_SIGNALS are soft, user-derived hints only. They NEVER override the current note, explicit user statements, or clear visual evidence — apply them only to genuinely ambiguous cases.
 - intent_confidence: 0.9+ for explicit user statements; lower for inference; use intent_source honestly.
 - candidate_connections: ONLY use memory_id values from the provided RETRIEVED_MEMORIES. Propose only genuinely meaningful relationships (same_subject / complementary / thematic / none) with a short basis. An empty array is fine — similarity alone is not a relationship.
 - Return only the JSON object per the schema.`;
@@ -214,6 +215,7 @@ export async function interpretMemory(input: {
   note: string | null;
   perception: Perception;
   cards: MemoryCard[];
+  learningContext?: string[];
 }): Promise< Interpretation> {
   const userPayload = [
     "ORIGINAL_USER_NOTE (verbatim; may be null):",
@@ -243,7 +245,10 @@ export async function interpretMemory(input: {
       }))
     ),
     "",
-    "LEARNING_SIGNALS: none (Phase 6 not yet implemented)",
+    "LEARNING_SIGNALS (soft hints from the user's own past corrections — the CURRENT NOTE above and explicit user statements ALWAYS override them; use only to bias genuinely ambiguous cases):",
+    input.learningContext && input.learningContext.length > 0
+      ? input.learningContext.join("\n")
+      : "none",
     "EXISTING_COLLECTIONS: none (Phase 5/7 not yet implemented)",
   ].join("\n");
 

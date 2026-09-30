@@ -5,6 +5,7 @@ import { analyzeImage, embedText, interpretMemory, toVectorLiteral } from "@/ser
 import { buildCanonicalText, buildQueryText, type Perception } from "@/server/ai/contracts";
 import { retrieveContext } from "@/server/services/retrieval";
 import { persistConnectionCandidates } from "@/server/services/connections";
+import { buildLearningContext } from "@/server/services/learning";
 import * as persist from "@/server/services/persist";
 import * as storage from "@/server/services/storage";
 
@@ -91,9 +92,30 @@ export const processCapture = inngest.createFunction(
       }
     });
 
+    // [3b] Personal-context bundle for reasoning (M5 — deterministic; non-fatal).
+    // Only the reasoning stage receives learning; vision/embeddings/retrieval stay objective.
+    const learning = await step.run("learning-context", async () => {
+      try {
+        return await buildLearningContext(userId, {
+          note,
+          perceptionText: [
+            perception.visual_description,
+            perception.visible_text,
+            ...(Array.isArray(perception.detected_entities) ? perception.detected_entities.map(String) : []),
+          ]
+            .filter(Boolean)
+            .join(" "),
+          cardTopics: cards.map((c) => c.topic).filter((t): t is string => Boolean(t)),
+        });
+      } catch (error) {
+        console.error("learning context failed:", (error as Error).message);
+        return { lines: [] as string[], patternIds: [] as string[] };
+      }
+    });
+
     // [4] Reasoning
     const interpretation = await step.run("reasoning", async () =>
-      interpretMemory({ note, perception, cards })
+      interpretMemory({ note, perception, cards, learningContext: learning.lines })
     );
 
     // [5] Persist memory + initial events (atomic RPC)

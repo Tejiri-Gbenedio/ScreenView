@@ -1,8 +1,20 @@
 import { synthesizeCollection } from "@/server/ai/providers";
+import { loadSuppressions } from "./learning";
 
 /** Normalized topic label for grouping (case/space-insensitive). */
 export function normalizeTopic(topic: string | null): string {
   return (topic ?? "").trim().toLowerCase();
+}
+
+/** The dominant topic of a member set (≥2 members share it), for learned mutes. */
+export function dominantTopicOf(members: MemoryLite[]): string | null {
+  const counts = new Map<string, number>();
+  for (const m of members) {
+    const t = normalizeTopic(m.topic);
+    if (t) counts.set(t, (counts.get(t) ?? 0) + 1);
+  }
+  const top = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0];
+  return top && top[1] >= 2 ? top[0] : null;
 }
 
 /**
@@ -276,13 +288,16 @@ export type DiscoveryResult = {
 export async function runDiscovery(deps: CollectionsDeps = {}): Promise<DiscoveryResult> {
   const client = await (deps.getClient ?? defaultUserClient)();
   const synthesize = deps.synthesize ?? synthesizeCollection;
-  let userId = deps.userId;
-  if (!userId) {
+  const sessionUserId: string | undefined = deps.userId;
+  let userId: string;
+  if (sessionUserId) {
+    userId = sessionUserId;
+  } else {
     const {
       data: { user },
     } = await client.auth.getUser();
     if (!user) return { created: [], skipped: "unauthorized" };
-    userId = user.id;
+    userId = String(user.id);
   }
 
   const now = Date.now();
@@ -367,11 +382,17 @@ export async function runDiscovery(deps: CollectionsDeps = {}): Promise<Discover
   }
 
   const candidates = detectCandidateSets(memories, connections, now);
+  // Learned collection mutes (M5): topics the user keeps dismissing stay quiet.
+  const suppressions = await loadSuppressions(userId, { getClient: async () => client });
+  const muted = new Set(suppressions.mutedTopics);
   const created: DiscoveryResult["created"] = [];
   let newCount = 0;
 
   for (const candidate of candidates) {
     if (newCount >= MAX_NEW_PER_RUN) break;
+
+    const dominant = dominantTopicOf(candidate.members);
+    if (dominant && muted.has(dominant)) continue;
 
     const sig = candidate.signature;
 

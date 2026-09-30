@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { composePaReport } from "@/server/ai/providers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { actOnCollection, runDiscovery, type DiscoveryResult } from "./collections";
+import { loadSuppressions } from "./learning";
 
 /**
  * M4 Personal Assistant (Phase 5): quiet, scheduled, deterministic-first.
@@ -148,9 +149,14 @@ export function reminderEligibility(
 export function selectReminders(
   memories: PaMemory[],
   now = Date.now(),
-  cap = REMINDER_MAX_PER_REPORT
+  cap = REMINDER_MAX_PER_REPORT,
+  mutedTopics: Set<string> = new Set()
 ): { selected: PaMemory[]; eligibleCount: number } {
-  const eligible = memories.filter((m) => reminderEligibility(m, now).eligible);
+  const eligible = memories.filter(
+    (m) =>
+      reminderEligibility(m, now).eligible &&
+      !mutedTopics.has((m.topic ?? "").trim().toLowerCase())
+  );
   eligible.sort((a, b) => {
     const aUser = a.intent_source === "user_statement" ? 0 : 1;
     const bUser = b.intent_source === "user_statement" ? 0 : 1;
@@ -508,8 +514,14 @@ export async function generatePaReportForUser(
     memory.pa_state = updated;
   }
 
-  // ---- deterministic selections ----
-  const { selected: reminderMemories } = selectReminders(memories, now);
+  // ---- deterministic selections (learning can only make the PA quieter) ----
+  const paSuppressions = await loadSuppressions(userId, { getClient: async () => client });
+  const { selected: reminderMemories } = selectReminders(
+    memories,
+    now,
+    REMINDER_MAX_PER_REPORT,
+    new Set(paSuppressions.mutedTopics)
+  );
   const usedIds = new Set(reminderMemories.map((m) => m.id));
   const recall = pickRecall({ memories, connections, usedIds, now });
 

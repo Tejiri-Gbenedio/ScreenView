@@ -182,7 +182,8 @@ describe("actOnConnection", () => {
     });
     const result = await actOnConnection("c1", "confirm", { getClient: async () => client });
     expect(result).toEqual({ ok: true, state: "confirmed" });
-    expect(updates[0]).toEqual({ state: "confirmed" });
+    expect(updates[0].state).toBe("confirmed");
+    expect(typeof updates[0].basis?.user_action_at).toBe("string");
   });
 
   it("dismisses a suggested connection", async () => {

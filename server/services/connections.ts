@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { loadSuppressions } from "./learning";
 
 /**
  * M3 connections (Phase 3 §12): candidates come from the reasoning call's
@@ -99,6 +100,7 @@ export async function persistConnectionCandidates(
   if (valid.length === 0) return { created: 0, skipped: 0 };
 
   const client = await (deps.getClient ?? defaultAdminClient)();
+  const suppressions = await loadSuppressions(input.userId, { getClient: async () => client });
 
   // Defence in depth: only the user's own memories may be linked.
   const { data: owned } = await client
@@ -116,6 +118,16 @@ export async function persistConnectionCandidates(
 
   for (const candidate of valid) {
     if (!ownedIds.has(candidate.otherMemoryId)) {
+      skipped += 1;
+      continue;
+    }
+    // Learned suppressions (M5): repeatedly dismissed types stay quiet; expired
+    // suppressions resume with a raised confidence floor.
+    if (suppressions.connectionTypes.includes(candidate.relationshipType)) {
+      skipped += 1;
+      continue;
+    }
+    if (candidate.confidence < MIN_CONNECTION_CONFIDENCE + suppressions.raisedConnectionFloor) {
       skipped += 1;
       continue;
     }
@@ -168,14 +180,16 @@ export async function actOnConnection(
   const client = await (deps.getClient ?? defaultUserClient)();
   const { data: row } = await client
     .from("connections")
-    .select("id, state")
+    .select("id, state, basis")
     .eq("id", connectionId)
     .maybeSingle();
   if (!row) return { ok: false, reason: "not_found" }; // other users' rows are invisible → not_found
   if (row.state !== "suggested") return { ok: false, reason: "invalid_state" };
 
   const state = action === "confirm" ? "confirmed" : "dismissed";
-  const { error } = await client.from("connections").update({ state }).eq("id", connectionId);
+  // user_action_at powers deterministic learning case dating (M5)
+  const basis = { ...((row.basis as Record<string, unknown>) ?? {}), user_action_at: new Date().toISOString() };
+  const { error } = await client.from("connections").update({ state, basis }).eq("id", connectionId);
   if (error) return { ok: false, reason: "invalid_state" };
   return { ok: true, state };
 }
